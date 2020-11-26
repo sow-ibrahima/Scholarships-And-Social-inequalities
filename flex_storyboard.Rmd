@@ -144,7 +144,7 @@ pal <- colorNumeric(
 metropole <- leaflet(newdf, height = "800px") %>%
        addProviderTiles(providers$CartoDB.DarkMatter,
        options = providerTileOptions(noWrap = TRUE), group = "Basic Layer(default)") %>%
-       setView(2, 40, 5) %>%
+       setView(2, 47, 6) %>%
     addPolygons(data=newdf,
                 fillColor = "black",
                 color = "yellow",
@@ -179,101 +179,100 @@ metropole
 # La réunion
 reunion_data <- newdf[newdf$nom=="La Reunion",]
 reunion <- leaflet(reunion_data, height = "200px") %>% 
- addProviderTiles(providers$CartoDB.DarkMatter,
- options = providerTileOptions(noWrap = TRUE), group = "Basic Layer(default)")  %>%
-  setView(lng = 55.53251, lat = -21.133165, zoom = 8) %>% 
-  addControl("La Réunion", position = "bottomleft") %>%
-  addPolygons(data=reunion_data,
-                fillColor = "orange",
-                color = "black",
-                weight = 0.5, smoothFactor = 0.5,
-                opacity = .5, fillOpacity = 1,
-                label= reunion_data@data$dep_lib,
-                popup = reunion_data@data$pct_bours, group = "France colored Polygons") %>%
-  addPolygons(data=reunion_data,
-                fillColor = ~revenus_pal(reunion_data@data$revenus),
-                color = "black",
-                weight = 0.5, smoothFactor = 0.5,
-                opacity = .5, fillOpacity = 1,
-                label= reunion_data@data$dep_lib,
-                popup = reunion_data@data$pct_bours, group = "Revenus depts Poly") %>%
-  addCircleMarkers(~long, ~lat, ~(pct_bours-15), weight = 5, stroke = TRUE, 
-                     color = "blue",fillColor = "bleu", group = "Scholarships depts markers")
+         addProviderTiles(providers$CartoDB.DarkMatter,
+         options = providerTileOptions(noWrap = TRUE), group = "Basic Layer(default)") %>%
+         setView(lng = 55.53251, lat = -21.133165, zoom = 8) %>% 
+      addPolygons(data=reunion_data,
+                  fillColor = "black",
+                  color = "yellow",
+                  weight = 0.5, smoothFactor = 0.5,
+                  opacity = .5, fillOpacity = 1,
+                  popup = reunion_data@data$pct_bours, group = "France Polygons") %>%
+      addPolygons(data=reunion_data,
+                  fillColor = ~revenus_pal(reunion_data@data$revenus),
+                  color = "black", 
+                  weight = 0.5, smoothFactor = 0.5,
+                  opacity = .5, fillOpacity = 1,
+                  label = paste(reunion_data@data$dep_lib, round(reunion_data@data$revenus),as.character("€")),
+                  popup = reunion_data@data$pct_bours, group = "Revenus depts Poly") %>%
+      addCircleMarkers(~long, ~lat, ~(pct_bours-15), stroke = T, weight = 1, opacity = 1,
+                       fillColor = ~pal(pct_bours), color = ~pal(pct_bours), 
+                       label = paste(reunion_data@data$dep_lib, round(reunion_data@data$pct_bours),as.character("%")),
+                       group = "Scholarships depts markers")
 # La martinique 
-Martinique <- newdf[newdf$nom=="Martinique",]
-martinique <- leaflet(Martinique, height = "200px") %>% 
-  addProviderTiles(providers$CartoDB.DarkMatter,
-  options = providerTileOptions(noWrap = TRUE), group = "Basic Layer(default)")  %>%
-  setView(lng = -61.01893, lat = 14.654532, zoom = 8) %>% 
-  addControl("Martinique", position = "bottomleft") %>%
-  addPolygons(data=Martinique,
-                fillColor = "orange",
-                color = "black",
-                weight = 0.5, smoothFactor = 0.5,
-                opacity = .5, fillOpacity = 1,
-                label= Martinique@data$dep_lib,
-                popup = Martinique@data$pct_bours, group = "France colored Polygons") %>%
-  addPolygons(data=Martinique,
-                fillColor = ~revenus_pal(Martinique@data$revenus),
-                color = "black",
-                weight = 0.5, smoothFactor = 0.5,
-                opacity = .5, fillOpacity = 1,
-                label= Martinique@data$dep_lib,
-                popup = Martinique@data$pct_bours, group = "Revenus depts Poly") %>%
-  addCircleMarkers(~long, ~lat, ~(pct_bours-15), weight = 5, stroke = TRUE, 
-                     color = "blue",fillColor = "bleu", group = "Scholarships depts markers")
+Martinique_data <- newdf[newdf$nom=="Martinique",]
+martinique <- leaflet(Martinique_data, height = "200px") %>% 
+         addProviderTiles(providers$CartoDB.DarkMatter,
+         options = providerTileOptions(noWrap = TRUE), group = "Basic Layer(default)") %>%
+         setView(lng = -61.01893, lat = 14.654532, zoom = 8) %>%
+      addPolygons(data=Martinique_data,
+                  fillColor = "black",
+                  color = "yellow",
+                  weight = 0.5, smoothFactor = 0.5,
+                  opacity = .5, fillOpacity = 1,
+                  popup = Martinique_data@data$pct_bours, group = "France Polygons") %>%
+      addPolygons(data=Martinique_data,
+                  fillColor = ~revenus_pal(Martinique_data@data$revenus),
+                  color = "black", 
+                  weight = 0.5, smoothFactor = 0.5,
+                  opacity = .5, fillOpacity = 1,
+                  label = paste(Martinique_data@data$dep_lib, round(Martinique_data@data$revenus),as.character("€")),
+                  popup = Martinique_data@data$pct_bours, group = "Revenus depts Poly") %>%
+      addCircleMarkers(~long, ~lat, ~(pct_bours-15), stroke = T, weight = 1, opacity = 1,
+                       fillColor = ~pal(pct_bours), color = ~pal(pct_bours), 
+                       label = paste(Martinique_data@data$dep_lib, round(Martinique_data@data$pct_bours),as.character("%")),
+                       group = "Scholarships depts markers")
 # La guadeloupe 
-Guadeloupe <- newdf[newdf$nom=="Guadeloupe",]
-guadeloupe <- leaflet(Guadeloupe, height = "200px") %>% 
-  addProviderTiles(providers$CartoDB.DarkMatter,
-  options = providerTileOptions(noWrap = TRUE), group = "Basic Layer(default)")  %>%
-  setView(lng = -61.53982, lat = 16.197587, zoom = 8) %>% 
-  addControl("Guadeloupe", position = "bottomleft") %>%
-  addPolygons(data=Guadeloupe,
-                fillColor = "orange",
-                color = "black",
-                weight = 0.5, smoothFactor = 0.5,
-                opacity = .5, fillOpacity = 1,
-                label= Guadeloupe@data$dep_lib,
-                popup = Guadeloupe@data$pct_bours, group = "France colored Polygons") %>%
-  addPolygons(data=Guadeloupe,
-                fillColor = ~revenus_pal(Guadeloupe@data$revenus),
-                color = "black",
-                weight = 0.5, smoothFactor = 0.5,
-                opacity = .5, fillOpacity = 1,
-                label= Guadeloupe@data$dep_lib,
-                popup = Guadeloupe@data$pct_bours, group = "Revenus depts Poly") %>%
-  addCircleMarkers(~long, ~lat, ~(pct_bours-15), weight = 5, stroke = TRUE, 
-                     color = "blue",fillColor = "bleu", group = "Scholarships depts markers")
+Guadeloupe_data <- newdf[newdf$nom=="Guadeloupe",]
+guadeloupe <- leaflet(Guadeloupe_data, height = "200px") %>% 
+     addProviderTiles(providers$CartoDB.DarkMatter,
+     options = providerTileOptions(noWrap = TRUE), group = "Basic Layer(default)") %>%
+     setView(lng = -61.53982, lat = 16.197587, zoom = 8) %>%
+  addPolygons(data=Guadeloupe_data,
+              fillColor = "black",
+              color = "yellow",
+              weight = 0.5, smoothFactor = 0.5,
+              opacity = .5, fillOpacity = 1,
+              popup = Guadeloupe_data@data$pct_bours, group = "France Polygons") %>%
+  addPolygons(data=Guadeloupe_data,
+              fillColor = ~revenus_pal(Guadeloupe_data@data$revenus),
+              color = "black", 
+              weight = 0.5, smoothFactor = 0.5,
+              opacity = .5, fillOpacity = 1,
+              label = paste(Guadeloupe_data@data$dep_lib, round(Guadeloupe_data@data$revenus),as.character("€")),
+              popup = Guadeloupe_data@data$pct_bours, group = "Revenus depts Poly") %>%
+  addCircleMarkers(~long, ~lat, ~(pct_bours-15), stroke = T, weight = 1, opacity = 1,
+                   fillColor = ~pal(pct_bours), color = ~pal(pct_bours), 
+                   label = paste(Guadeloupe_data@data$dep_lib, round(Guadeloupe_data@data$pct_bours),as.character("%")),
+                   group = "Scholarships depts markers")
 # La guyane 
-Guyane <- newdf[newdf$nom=="Guyane",]
-guyane <- leaflet(Guyane, height = "200px") %>% 
-  addProviderTiles(providers$CartoDB.DarkMatter,
-  options = providerTileOptions(noWrap = TRUE), group = "Basic Layer(default)")  %>%
-  setView(lng = -53.23917, lat = 3.922325, zoom = 6) %>% 
-  addControl("Guyane", position = "bottomleft") %>%
-  addPolygons(data=Guyane,
-                fillColor = "orange",
-                color = "black",
-                weight = 0.5, smoothFactor = 0.5,
-                opacity = .5, fillOpacity = 1,
-                label= Guyane@data$dep_lib,
-                popup = Guyane@data$pct_bours, group = "France colored Polygons") %>%
-  addPolygons(data=Guyane,
-                fillColor = ~revenus_pal(Guyane@data$revenus),
-                color = "black",
-                weight = 0.5, smoothFactor = 0.5,
-                opacity = .5, fillOpacity = 1,
-                label= Guyane@data$dep_lib,
-                popup = Guyane@data$pct_bours, group = "Revenus depts Poly") %>%
-  addCircleMarkers(~long, ~lat, ~(pct_bours-15), weight = 5, stroke = TRUE, 
-                     color = "blue",fillColor = "bleu", group = "Scholarships depts markers")
+Guyane_data <- newdf[newdf$nom=="Guyane",]
+guyane <- leaflet(Guyane_data, height = "200px") %>% 
+     addProviderTiles(providers$CartoDB.DarkMatter,
+     options = providerTileOptions(noWrap = TRUE), group = "Basic Layer(default)") %>%
+     setView(lng = -53.23917, lat = 3.922325, zoom = 4) %>% 
+  addPolygons(data=Guyane_data,
+              fillColor = "black",
+              color = "yellow",
+              weight = 0.5, smoothFactor = 0.5,
+              opacity = .5, fillOpacity = 1,
+              popup = Guyane_data@data$pct_bours, group = "France Polygons") %>%
+  addPolygons(data=Guyane_data,
+              fillColor = ~revenus_pal(Guyane_data@data$revenus),
+              color = "black", 
+              weight = 0.5, smoothFactor = 0.5,
+              opacity = .5, fillOpacity = 1,
+              label = paste(Guyane_data@data$dep_lib, round(Guyane_data@data$revenus),as.character("€")),
+              popup = Guyane_data@data$pct_bours, group = "Revenus depts Poly") %>%
+  addCircleMarkers(~long, ~lat, ~(pct_bours-15), stroke = T, weight = 1, opacity = 1,
+                   fillColor = ~pal(pct_bours), color = ~pal(pct_bours), 
+                   label = paste(Guyane_data@data$dep_lib, round(Guyane_data@data$pct_bours),as.character("%")),
+                   group = "Scholarships depts markers")
 ```
 
-```{r}
+```{r} 
 library(htmltools)
-leaflet_grid <- 
-  tagList(tags$table(width = "100%", border = "1px",
+leaflet_grid <- tagList(tags$table(width = "1400px", height = "607px",border = "1px",
                      tags$tr(
                        tags$td(reunion, width = "30%"), # reduce first column width
                        tags$td(metropole, rowspan = 4)  # span across the four other maps
@@ -289,7 +288,6 @@ leaflet_grid <-
                      ) 
   )
           )
-
 browsable(leaflet_grid)
 ``` 
 
