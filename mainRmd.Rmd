@@ -1,5 +1,5 @@
 ---
-title: "XXX"
+title: "mainRmd"
 author: "Ibrahima SOW"
 date: "23/11/2020"
 output: html_document
