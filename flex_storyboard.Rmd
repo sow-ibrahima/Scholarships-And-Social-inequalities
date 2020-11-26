@@ -1,0 +1,128 @@
+---
+title: "Data viz"
+runtime: shiny 
+output:
+  flexdashboard::flex_dashboard:
+    source_code: embed
+    storyboard: true
+    theme: darkly
+    css: viz_project.css
+    social: "menu" 
+    vertical_layout: fill
+---
+
+
+```{r message=FALSE, warning=FALSE}
+# Packages loading
+library(flexdashboard)
+library(shiny)
+library(shinybusy)
+library(tidyverse)
+library(readr)
+library(sf)
+library(rgdal)
+library(leaflet)
+library(viridis)
+library(vov)
+```
+
+# Landing Page 
+
+```{r}
+add_busy_bar(timeout = 400, color = "#c7636a", centered = FALSE, height = "6px")
+
+# tags$img(
+#      src = "img_lp.png",
+#      style = 'position: fixed; opacity: 0.8;filter: brightness(30%);'
+#    )
+```
+
+```{r}
+my_jumbotron <- function(header , content, button = TRUE, button_link, ...){
+  
+  button_label = c(...)
+  if (button){
+    div(class = "jumbotron",
+        h1(header, align="center"), p(content, align="center"), p(a(href = button_link ,target="_blank",
+        class = "btn btn-primary btn-lg button", role= 'button', button_label), align="center"))
+} else {
+    div(class = "jumbotron", h1(header), p(content))
+}
+  
+}
+
+fixedPage(
+use_vov(),
+    fade_in_up(
+my_jumbotron(header="Welcome", content="Un peu de contexte t'vois !!! Lorem ipsum dolor sit amet, et bla et bla", button =  "True", button_link="https://data.enseignementsup-recherche.gouv.fr/explore/dataset/fr-esr-parcoursup/information/", button_Label = "Check the dataset"))
+
+)
+```
+
+Story Board {.storyboard}
+=========================================
+
+```{r include=FALSE}
+# Data loading and tidying
+mydata <-  read_delim("fr-esr-parcoursup.csv", 
+    ";", escape_double = FALSE, trim_ws = TRUE)
+mydata_sf <- subset(mydata, select = c(contrat_etab, dep, dep_lib, fili))
+f_depts <- readOGR("depts")
+```
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+names(f_depts)[2] <- "dep_lib"
+unique_depts <- unique(mydata_sf$dep_lib)
+my_shp <- f_depts[f_depts$dep_lib %in% unique_depts,]
+newdf <- sp::merge(my_shp, mydata_sf, by="dep_lib", duplicateGeoms = TRUE)
+otherSHP <- f_depts[!f_depts$dep_lib %in% unique_depts,] %>%            
+      merge(mydata_sf,  by="dep_lib",duplicateGeoms = TRUE )
+```
+
+
+### **Formations prédominantes par région:** Un texte qui explique in shortened words ce qu'on veut montrer avec cette carte. Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+
+```{r include=FALSE}
+factpal <- colorFactor(viridis(2), newdf@data$fili, reverse = T)
+```
+
+```{r}
+leaflet() %>%
+   addProviderTiles(providers$CartoDB.DarkMatter,
+   options = providerTileOptions(noWrap = TRUE)) %>%
+   setView(2, 47, 5.4) #%>%
+# addPolygons(data=newdf,
+#             fillColor = ~factpal(newdf@data$fili),
+#             color = "black",
+#             weight = 0.5, smoothFactor = 0.5, 
+#             opacity = 1.0, fillOpacity = 0.5, 
+#             label= newdf@data$dep_lib,
+#             popup = newdf@data$fili) %>%
+# addPolygons(data=otherSHP, 
+#             fillColor = "grey",
+#             color = "black",
+#             weight = 0.2, smoothFactor = 0.5,
+#             opacity = 0.5, fillOpacity = 0.8,
+#             label = otherSHP@data$dep_lib) %>% 
+# leaflet::addLegend(pal=factpal, values=newdf@data$fili, opacity=1)
+```
+
+
+### **Domaine de formations à Rennes: ** Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+
+```{r}
+library(plotly)
+p <- ggplot(data = diamonds, aes(x = cut, fill = clarity)) +
+            geom_bar(position = "dodge")
+ggplotly(p)
+```
+
+
+### **Boursiers/Femmes dans le scientifique: ** Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+
+```{r}
+library(metricsgraphics)
+mjs_plot(mtcars, x=wt, y=mpg) %>%
+  mjs_point(color_accessor=carb, size_accessor=carb) %>%
+  mjs_labs(x="Weight of Car", y="Miles per Gallon")
+```
