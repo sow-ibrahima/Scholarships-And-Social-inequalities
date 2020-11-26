@@ -250,7 +250,7 @@ Guyane_data <- newdf[newdf$nom=="Guyane",]
 guyane <- leaflet(Guyane_data, height = "200px") %>% 
      addProviderTiles(providers$CartoDB.DarkMatter,
      options = providerTileOptions(noWrap = TRUE), group = "Basic Layer(default)") %>%
-     setView(lng = -53.23917, lat = 3.922325, zoom = 4) %>% 
+     setView(lng = -53.23917, lat = 3.922325, zoom = 5) %>% 
   addPolygons(data=Guyane_data,
               fillColor = "black",
               color = "yellow",
