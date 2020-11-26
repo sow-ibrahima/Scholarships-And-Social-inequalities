@@ -19,10 +19,13 @@ library(shiny)
 library(shinybusy)
 library(tidyverse)
 library(readr)
-library(sf)
-library(rgdal)
 library(leaflet)
+library(sf)
+library(data.table)
 library(viridis)
+library(xml2)
+library(rvest)
+library(rgdal) 
 library(vov)
 ```
 
@@ -62,49 +65,122 @@ my_jumbotron(header="Welcome", content="Un peu de contexte t'vois !!! Lorem ipsu
 Story Board {.storyboard}
 =========================================
 
-```{r include=FALSE}
+```{r message=FALSE, warning=FALSE, include=FALSE}
 # Data loading and tidying
-mydata <-  read_delim("fr-esr-parcoursup.csv", 
+mydata <-  read_delim("data/fr-esr-parcoursup.csv", 
     ";", escape_double = FALSE, trim_ws = TRUE)
 mydata_sf <- subset(mydata, select = c(contrat_etab, dep, dep_lib, fili))
 f_depts <- readOGR("depts")
 ```
 
 ```{r message=FALSE, warning=FALSE, include=FALSE}
-names(f_depts)[2] <- "dep_lib"
-unique_depts <- unique(mydata_sf$dep_lib)
-my_shp <- f_depts[f_depts$dep_lib %in% unique_depts,]
-newdf <- sp::merge(my_shp, mydata_sf, by="dep_lib", duplicateGeoms = TRUE)
-otherSHP <- f_depts[!f_depts$dep_lib %in% unique_depts,] %>%            
-      merge(mydata_sf,  by="dep_lib",duplicateGeoms = TRUE )
+# Récup deps infos 
+deps_info <- distinct(mydata_sf, dep, dep_lib) %>% na.omit()
+deps_info$dep <- as.character(deps_info$dep)
+# Récup lat et long
+lat_long <- as.data.frame(str_split_fixed(mydata_sf$g_olocalisation_des_formations, ",", 2))
+mydata_sf <- cbind(mydata_sf, lat_long) %>% na.omit() 
+names(mydata_sf)[6] <- "lat" 
+names(mydata_sf)[7] <- "long" 
+mydata_sf$g_olocalisation_des_formations=NULL
+mydata_sf$pct_bours <- as.numeric(mydata_sf$pct_bours)
+mydata_sf$lat <- as.numeric(mydata_sf$lat)
+mydata_sf$long <- as.numeric(mydata_sf$long)
+lat_long <-as.data.frame(apply(mydata_sf[,5:6], 2, function(x) tapply(x, mydata_sf$dep, mean)))
+
+# Moyenne taux de boursiers par dept. 
+df <- as.data.frame(tapply(mydata_sf$pct_bours, mydata_sf$dep, mean)) %>%
+       tibble::rownames_to_column("dep") 
+
+# Bindind
+df <- cbind(df,lat_long)
+df <- deps_info %>% inner_join(df, by= "dep")
+
+names(df)[1] <- "dep"
+names(df)[3] <- "pct_bours"
+df$dep <- as.numeric(df$dep)
+```
+
+```{r}
+# Revenu par département - Web Scrapping
+content <- read_html("http://www.journaldunet.com/business/salaire/classement/departements/revenus")
+content2 <- read_html("http://www.journaldunet.com/business/salaire/classement/departements/revenus?page=2")
+
+tables <- content %>% html_table(fill = TRUE)
+tables2 <- content2 %>% html_table(fill = TRUE)
+
+ 
+first_table <- tables[[1]] 
+second_one <- tables2[[1]]             
+dept_revenus <- rbind(first_table, second_one)  %>%
+                    select(-c(Rang)) 
+names(dept_revenus)[2]<-paste("revenus") 
+
+dept_num <- as.data.frame(str_split_fixed(dept_revenus$Département, "[(]", 2))
+colnames(dept_num) <- c("dept_name", "dep")
+revenus_df <- cbind(dept_num, dept_revenus) %>%
+                    select(-c(Département)) %>%
+                       select(everything(), revenus)
+revenus_df$dep <- gsub("[)]","" , revenus_df$dep) %>% as.numeric()
+revenus_df$revenus <- gsub("[[:blank:]]", "", revenus_df$revenus)
+revenus_df$revenus <- substr(revenus_df$revenus, 1,4) %>% as.numeric() *2 *12 # 2 pour représenter un ménage et 12 pour l'année 
+```
+
+```{r}
+# Spatial data tidying
+names(f_depts)[1] <- "dep"
+f_depts$dep <- as.numeric(f_depts$dep)
+newdf <- sp::merge(f_depts, df, by="dep", duplicateGeoms = TRUE)
+newdf <- sp::merge(newdf, revenus_df, by="dep", duplicateGeoms = TRUE)
 ```
 
 
 ### **Formations prédominantes par région:** Un texte qui explique in shortened words ce qu'on veut montrer avec cette carte. Lorem ipsum dolor sit amet, consectetur adipiscing elit.
 
 ```{r include=FALSE}
-factpal <- colorFactor(viridis(2), newdf@data$fili, reverse = T)
+# Color palette for maps 
+num_pal <- colorNumeric(viridis(5, option = "inferno", direction = -1), newdf@data$pct_bours, na.color = "#808080")
+revenus_pal <- colorNumeric(viridis(5, option = "inferno", direction = -1), newdf@data$revenus, na.color = "#808080")
+
+# get domain of numeric data
+domain <- range(na.omit(newdf@data$pct_bours))
+pal <- colorNumeric(
+  palette = c("white", "grey", "black"),
+  domain = domain
+)
 ```
 
 ```{r}
-leaflet() %>%
-   addProviderTiles(providers$CartoDB.DarkMatter,
-   options = providerTileOptions(noWrap = TRUE)) %>%
-   setView(2, 47, 5.4) #%>%
-# addPolygons(data=newdf,
-#             fillColor = ~factpal(newdf@data$fili),
-#             color = "black",
-#             weight = 0.5, smoothFactor = 0.5, 
-#             opacity = 1.0, fillOpacity = 0.5, 
-#             label= newdf@data$dep_lib,
-#             popup = newdf@data$fili) %>%
-# addPolygons(data=otherSHP, 
-#             fillColor = "grey",
-#             color = "black",
-#             weight = 0.2, smoothFactor = 0.5,
-#             opacity = 0.5, fillOpacity = 0.8,
-#             label = otherSHP@data$dep_lib) %>% 
-# leaflet::addLegend(pal=factpal, values=newdf@data$fili, opacity=1)
+# 1st map 
+metropole <- leaflet(newdf, height = "800px") %>%
+       addProviderTiles(providers$CartoDB.DarkMatter,
+       options = providerTileOptions(noWrap = TRUE), group = "Basic Layer(default)") %>%
+       setView(2, 40, 5) %>%
+    addPolygons(data=newdf,
+                fillColor = "black",
+                color = "yellow",
+                weight = 0.5, smoothFactor = 0.5,
+                opacity = .5, fillOpacity = 1,
+                popup = newdf@data$pct_bours, group = "France Polygons") %>%
+      addPolygons(data=newdf,
+                fillColor = ~revenus_pal(newdf@data$revenus),
+                color = "black", 
+                weight = 0.5, smoothFactor = 0.5,
+                opacity = .5, fillOpacity = 1,
+                label = paste(newdf@data$dep_lib, round(newdf@data$revenus),as.character("€")),
+                popup = newdf@data$pct_bours, group = "Revenus depts Poly") %>%
+    addCircleMarkers(~long, ~lat, ~(pct_bours-15), stroke = T, weight = 1, opacity = 1,
+                     fillColor = ~pal(pct_bours), color = ~pal(pct_bours), 
+                     label = paste(newdf@data$dep_lib, round(newdf@data$pct_bours),as.character("%")),
+                     group = "Scholarships depts markers") %>%
+    leaflet::addLegend(pal=revenus_pal, values=newdf@data$revenus, opacity=1, group = "Revenus depts Poly" ) %>%
+    leaflet::addLegend(pal=pal, values=newdf@data$pct_bours, opacity=1,group ="Scholarships depts markers") %>%
+addLayersControl(
+    baseGroups = c("Basic Layer (default)"),
+    overlayGroups = c("France Polygons","Revenus depts Poly", "Scholarships depts markers"), position = "topleft",
+    options = layersControlOptions(collapsed = T)
+  )
+metropole
 ```
 
 
