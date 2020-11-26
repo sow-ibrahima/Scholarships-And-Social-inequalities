@@ -4,7 +4,7 @@ author: "Ibrahima SOW"
 date: "23/11/2020"
 output: html_document
 ---
-
+ 
 ```{r message=FALSE, warning=FALSE}
 library(tidyverse)
 library(readr)
@@ -19,11 +19,11 @@ library(ggiraph)
 library(rgdal) 
 ```
 
-```{r include=FALSE}
-mydata <-  read_delim("fr-esr-parcoursup.csv", 
+```{r message=FALSE, warning=FALSE, include=FALSE}
+mydata <-  read_delim("data/fr-esr-parcoursup.csv", 
     ";", escape_double = FALSE, trim_ws = TRUE)
 mydata_sf <- subset(mydata, select = c(contrat_etab, dep, dep_lib, pct_bours, g_olocalisation_des_formations))
-head(mydata_sf)
+#head(mydata_sf)
 ```
 
 
@@ -92,8 +92,8 @@ f_depts@data
 ```{r}
 names(f_depts)[1] <- "dep"
 f_depts$dep <- as.numeric(f_depts$dep)
-newdf <- sp::merge(f_depts, df, by="dep", duplicateGeoms = TRUE)
-newdf <- sp::merge(newdf, revenus_df, by="dep", duplicateGeoms = TRUE)
+new_df <- sp::merge(f_depts, df, by="dep", duplicateGeoms = TRUE)
+newdf <- sp::merge(new_df, revenus_df, by="dep", duplicateGeoms = TRUE)
 ```
 
 ```{r message=FALSE, warning=FALSE}
@@ -343,7 +343,7 @@ p <- mydata_sf_out %>% ggplot2::ggplot() +
 
 ggiraph(code = {print(p)},hover_css = "{fill:orange;}")
 ```
-
+ 
 ```{r} 
 p1 <- mydata_sf_out[1:10732,] %>% ggplot2::ggplot() + 
   geom_sf(aes(fill = pct_bours)) + 
