@@ -12,8 +12,9 @@ output:
       social: "menu" 
 ---
 
+### Description : 
+Short student project about how scholarships can help students from low income families go further in their studies. 
 ```{r setup, include=FALSE}
-library(flexdashboard)
 library(flexdashboard)
 library(shiny)
 library(shinybusy)
