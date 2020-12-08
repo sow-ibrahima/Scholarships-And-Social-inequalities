@@ -2,7 +2,7 @@
 title: "Data viz"
 runtime: shiny 
 output:
-    flexdashboard::flex_dashboard:
+   flexdashboard::flex_dashboard:
     source_code: embed
     storyboard: true
     theme: darkly
